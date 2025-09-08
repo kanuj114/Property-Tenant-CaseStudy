@@ -1,0 +1,6 @@
+@PropertyUI_HostAddress = http://localhost:5223
+
+GET {{PropertyUI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
