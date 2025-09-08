@@ -1,0 +1,152 @@
+
+Create a folder named Models. 
+
+You will define two models: Tenant and Property. These models represent the structure of the data you’ll be working with.  For example:
+ 
+1.Tenant:
+*********
+Properties:
+ 
+TenantId (int): Unique identifier for the tenant.
+
+Name (string): Name of the tenant.
+
+Email (string): Email address of the tenant.
+
+PropertyId (int?): Foreign key linking to the associated Property.
+
+Property (Property?): Navigation property to the associated Property.
+ 
+ 
+2.Property:
+ **********
+Properties:
+ 
+PropertyId (int): Unique identifier for the property.
+
+Address (string): Address of the property.
+
+RentalPrice (decimal): Monthly rental price for the property.
+
+AvailableFrom (string): Date when the property becomes available for rent.
+
+Tenants (ICollection<Tenant>?): Collection of tenants associated with the property. The [JsonIgnore] attribute is applied to this property, indicating that it should be excluded from JSON serialization.
+ 
+ 
+Using ApplicationDbContext for Tenant and Property Management. ApplicationDbContext must be present inside the folder Data.
+ 
+	Namespace - propertyUI.Data
+ 
+ 
+The ApplicationDbContext class acts as the primary interface between the application and the database, managing CRUD (Create, Read, Update, Delete) operations for Property entities and (Create, Read, Update, Delete) operations for Tenant entities. This context class defines the database schema through its DbSet properties and manages the one-to-many relationship between Property and Tenant.
+ 
+ 
+DbSet Properties:
+ 
+ 
+DbSet<Property> Properties:
+ 
+Represents a collection of Property entities stored in the Properties table. Each Property can have multiple associated Tenant entries, defining the one-to-many relationship between Property and Tenant (i.e., one property can be rented by many tenants over time).
+ 
+ 
+DbSet<Tenant> Tenants:
+ 
+Represents a collection of Tenant entities stored in the Tenants table. Each Tenant is associated with a single Property, establishing a many-to-one relationship with the Tenant entity.
+ 
+ 
+Configuration:
+ 
+One-to-Many Relationship: Configures the relationship where one Property can have many Tenants.
+ 
+ 
+Implement the actual logic in the controller:
+ 
+ 
+Controllers: Namespace: propertyUI.Controllers
+ 
+ 
+TenantController
+ 
+ 
+GetTenants() - Retrieves a list of all tenants along with their associated properties. If no tenants are found, it returns a 204 No Content. Otherwise, it returns a 200 OK with a list of tenants and their related property details.
+
+CreateTenant([FromBody] Tenant tenant) - Adds a new tenant to the database. If the PropertyId is not provided, it returns a 400 Bad Request with an error message. Upon successful creation, it returns a 201 Created with the location of the newly created tenant.
+
+UpdateTenant(int id, [FromBody] Tenant tenant) - Updates an existing tenant identified by id. If the provided id does not match the TenantId in the request body or if the tenant does not exist, 404 Not Found, respectively. On successful update, it returns 204 No Content.
+ 
+ 
+PropertyController
+ 
+ 
+GetProperty(int id) - Retrieves a single property by their PropertyId along with their associated tenants. If the property is not found, it returns a 404 Not Found. If found, it returns a 200 OK with the property details and their related tenants.
+
+CreateProperty([FromBody] Property propertyModel) - Adds a new propertyModel to the database. Upon successful creation, it returns a 201 Created with the address of the newly created propertyModel. A PropertyAddressException is thrown for invalid addresses with 500 status code.
+
+GetPropertiesSortedByPriceDesc() - Retrieves all properties sorted by rental price in descending order. 200 OK is returned with a sorted list of properties and their tenants.
+ 
+ 
+PropertyAddressException:
+ 
+ 
+Namespace: propertyUI.Exceptions
+ 
+Description: A custom exception thrown when a property’s address is not among the allowed address. This exception is used to enforce address constraints for properties, ensuring that only specific, predefined address are accepted.
+ 
+ 
+Allowed Address:
+ 
+The property’s address must be one of the following:
+ 
+"New York"
+
+"San Francisco"
+
+Error Message Format:
+ 
+When the exception is thrown, the error message follows the format: 
+
+"Address '{propertyModel.Address}' is not allowed. Only allowed address are: {string.Join(", ", AllowedAddress)}."
+
+This message provides a specific indication of the invalid address and lists the allowed address.
+ 
+ 
+Endpoints:
+ 
+ 
+Tenants:
+ 
+ 
+GET /api/Tenant - Retrieve a list of all tenants, including their associated properties.
+
+POST /api/Tenant - Create a new tenant. Requires a PropertyId.
+
+PUT /api/Tenant/{id} - Update an existing tenant by its ID.
+ 
+ 
+Properties:
+ 
+GET /api/Property/{id} - Retrieve a specific property by their ID, including their associated tenants.
+
+POST /api/Property - Create a new property.
+
+GET /api/Property/SortedByPriceDesc - Retrieves all properties sorted by rental price in descending order.
+ 
+ 
+Status Codes and Error Handling:
+ 
+204 No Content: Returned when no records are found for tenants or properties.
+ 
+200 OK: Returned when records are successfully retrieved.
+ 
+201 Created: Returned when a new tenant or property is successfully created.
+ 
+400 Bad Request: Returned when there are validation errors or mismatched IDs during updates.
+ 
+404 Not Found: Returned when a tenant or property is not found during retrieval or deletion.
+ 
+PropertyAddressException: Thrown when the Address in a property is invalid address, with the message: "Address '{propertyModel.Address}' is not allowed. Only allowed address are: {string.Join(", ", AllowedAddress)}.". This exception should return status code 500.
+
+
+
+
+               
